@@ -1,0 +1,59 @@
+{% extends 'redirects/_layout' %}
+{% set selectedSubnavItem = 'rules' %}
+{% set basePath = 'redirects' %}
+{% set pageParams = {q: search, sort: sort, direction: direction} %}
+
+{% block actionButton %}
+    <a class="btn submit add icon" href="{{ cpUrl('redirects/new') }}">New redirect</a>
+{% endblock %}
+
+{% block content %}
+    <form method="get" action="{{ cpUrl('redirects') }}" class="flex mb-4">
+        <label for="redirect-search">Search redirects</label>
+        <input id="redirect-search" class="text" type="search" name="q" value="{{ search }}" placeholder="Source, destination, or note">
+        <button type="submit" class="btn">Search</button>
+    </form>
+    <div class="tableview">
+        <table class="data fullwidth">
+            <thead><tr>
+                {% for key, label in {sourcePath: 'Source', destination: 'Destination', matchType: 'Type', mode: 'Mode', statusCode: 'Status', hitCount: 'Hits', lastHitAt: 'Last hit', enabled: 'Enabled'} %}
+                    <th scope="col"{% if sort == key %} aria-sort="{{ direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                        <a href="{{ cpUrl('redirects', {q: search, sort: key, direction: sort == key and direction == 'asc' ? 'desc' : 'asc'}) }}">{{ label }}{% if sort == key %} {{ direction == 'asc' ? '↑' : '↓' }}{% endif %}</a>
+                    </th>
+                {% endfor %}
+                <th scope="col">Actions</th>
+            </tr></thead>
+            <tbody>
+            {% for rule in rules %}
+                <tr>
+                    <th scope="row"><a href="{{ cpUrl('redirects/' ~ rule.id) }}">{{ rule.sourcePath ?: '/' }}</a></th>
+                    <td class="break-word">{{ rule.statusCode == 410 ? 'Gone' : rule.destination }}</td>
+                    <td>{{ rule.matchType }}</td><td>{{ rule.mode == 'always' ? 'Always' : '404 only' }}</td>
+                    <td>{{ rule.statusCode }}</td><td>{{ rule.hitCount|number_format }}</td>
+                    <td>{{ rule.lastHitAt ? rule.lastHitAt|datetime('short') : '—' }}</td><td>{{ rule.enabled ? 'Yes' : 'No' }}</td>
+                    <td><div class="flex">
+                        <a href="{{ cpUrl('redirects/' ~ rule.id) }}">Edit</a>
+                        <form method="post">
+                            {{ csrfInput() }}{{ actionInput('redirects/rules/toggle') }}{{ hiddenInput('id', rule.id) }}{{ hiddenInput('enabled', rule.enabled ? '0' : '1') }}
+                            <button type="submit" class="btn small">{{ rule.enabled ? 'Disable' : 'Enable' }}</button>
+                        </form>
+                        <form method="post" data-redirects-confirm="Delete this redirect?">
+                            {{ csrfInput() }}{{ actionInput('redirects/rules/delete') }}{{ hiddenInput('id', rule.id) }}
+                            <button type="submit" class="btn small">Delete</button>
+                        </form>
+                    </div></td>
+                </tr>
+            {% else %}<tr><td colspan="9">No redirects found.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <h2>Defined in code (config/redirects.php)</h2>
+    <p class="light">These rules are maintained by a developer. They run on 404s after the redirects above.</p>
+    <table class="data fullwidth">
+        <thead><tr><th scope="col">Source</th><th scope="col">Destination</th><th scope="col">Status</th></tr></thead>
+        <tbody>{% for rule in codeRules %}
+            <tr><td>{{ rule.from }}</td><td>{{ rule.to }}</td><td>{{ rule.status }}</td></tr>
+        {% else %}<tr><td colspan="3">No redirects defined in code.</td></tr>{% endfor %}</tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'redirects/_layout' %}
+{% set title = '404s' %}
+{% set selectedSubnavItem = 'logs' %}
+{% set basePath = 'redirects/404s' %}
+{% set pageParams = {days: days} %}
+
+{% block actionButton %}
+    <form method="post" data-redirects-confirm="Clear all logged 404s for every site?">
+        {{ csrfInput() }}{{ actionInput('redirects/logs/clear') }}
+        <button type="submit" class="btn">Clear all</button>
+    </form>
+{% endblock %}
+
+{% block content %}
+    <nav class="flex mb-4" aria-label="404 date range">
+        {% for value, label in {7: 'Last 7 days', 30: 'Last 30 days', 0: 'All time'} %}
+            <a class="btn{{ days == value ? ' active' : '' }}" href="{{ cpUrl('redirects/404s', {days: value}) }}"{% if days == value %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </nav>
+    <p class="light">{{ count }} unresolved paths. Counts include requests that reached Craft; paths now handled by an enabled redirect are hidden.</p>
+    <table class="data fullwidth">
+        <thead><tr><th scope="col">Path</th>{% if craft.app.isMultiSite %}<th scope="col">Site</th>{% endif %}<th scope="col">Hits</th><th scope="col">Last seen</th><th scope="col">Last referrer</th><th scope="col">Actions</th></tr></thead>
+        <tbody>{% for row in rows %}
+            <tr>
+                <th scope="row" class="break-word">/{{ row.path }}</th>
+                {% if craft.app.isMultiSite %}<td>{{ craft.app.sites.getSiteById(row.siteId).name ?? '—' }}</td>{% endif %}
+                <td>{{ row.hitCount|number_format }}</td><td>{{ row.lastSeen|datetime('short') }}</td><td class="break-word">{{ row.lastReferrer ?: '—' }}</td>
+                <td><div class="flex">
+                    {% if canManage %}<a href="{{ cpUrl('redirects/new', {logId: row.id}) }}">Create redirect</a>{% endif %}
+                    <form method="post" data-redirects-confirm="Delete this 404 log entry?">
+                        {{ csrfInput() }}{{ actionInput('redirects/logs/delete') }}{{ hiddenInput('id', row.id) }}
+                        <button type="submit" class="btn small">Delete</button>
+                    </form>
+                </div></td>
+            </tr>
+        {% else %}<tr><td colspan="{{ craft.app.isMultiSite ? 6 : 5 }}">No unresolved 404s in this period.</td></tr>{% endfor %}</tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'redirects/_layout' %}
+{% import '_includes/forms' as forms %}
+{% set selectedSubnavItem = 'rules' %}
+{% set title = rule.id ? 'Edit redirect' : 'New redirect' %}
+{% set fullPageForm = true %}
+{% set crumbs = [{label: 'Redirects', url: cpUrl('redirects')}] %}
+
+{% block content %}
+    {{ actionInput('redirects/rules/save') }}
+    {{ hiddenInput('id', rule.id) }}
+    {{ hiddenInput('logId', logId) }}
+    {{ forms.textField({label: 'Source', id: 'sourcePath', name: 'sourcePath', value: rule.sourceInput, errors: rule.getErrors('sourcePath'), instructions: 'Enter a full URL, /path, or path. Use / for the home page. For regex, include PHP delimiters, for example ~^old/(.+)$~i.', maxlength: 500, autofocus: true}) }}
+    {{ forms.selectField({label: 'Match type', id: 'matchType', name: 'matchType', value: rule.matchType, errors: rule.getErrors('matchType'), options: [{label: 'Exact', value: 'exact'}, {label: 'Prefix (whole path segments)', value: 'prefix'}, {label: 'Regular expression', value: 'regex'}]}) }}
+    {{ forms.textField({label: 'Destination', id: 'destination', name: 'destination', value: rule.destination, errors: rule.getErrors('destination'), instructions: 'An https:// URL or site-relative path. Regex captures can use $1, $2, etc. Leave blank for 410 Gone.', maxlength: 1000}) }}
+    {{ forms.selectField({label: 'Status code', id: 'statusCode', name: 'statusCode', value: rule.statusCode, errors: rule.getErrors('statusCode'), options: [{label: '301 — Permanent redirect', value: 301}, {label: '302 — Temporary redirect', value: 302}, {label: '307 — Temporary (preserve method)', value: 307}, {label: '308 — Permanent (preserve method)', value: 308}, {label: '410 — Gone', value: 410}]}) }}
+    {{ forms.radioGroupField({label: 'Mode', id: 'mode', name: 'mode', value: rule.mode, errors: rule.getErrors('mode'), options: [{label: "Only when the page doesn't exist (404)", value: 'notFound'}, {label: 'Always, even if a page exists at this URL', value: 'always'}]}) }}
+    {{ forms.lightswitchField({label: 'Keep query string', id: 'preserveQuery', name: 'preserveQuery', on: rule.preserveQuery, errors: rule.getErrors('preserveQuery')}) }}
+    {% if craft.app.isMultiSite %}
+        {{ forms.selectField({label: 'Site', id: 'siteId', name: 'siteId', value: rule.siteId, options: sites, errors: rule.getErrors('siteId')}) }}
+    {% else %}{{ hiddenInput('siteId', rule.siteId) }}{% endif %}
+    {{ forms.textareaField({label: 'Note', id: 'note', name: 'note', value: rule.note, rows: 3, errors: rule.getErrors('note')}) }}
+    {{ forms.lightswitchField({label: 'Enabled', id: 'enabled', name: 'enabled', on: rule.enabled, errors: rule.getErrors('enabled')}) }}
+{% endblock %}

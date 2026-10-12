@@ -1,0 +1,21 @@
+{% extends '_layouts/cp' %}
+{% set selectedNavItem = 'redirects' %}
+{% set title = title ?? 'Redirects' %}
+
+{% block footer %}
+    {% if pages is defined and pages > 1 %}
+        <nav class="flex" aria-label="Pagination">
+            {% if page > 1 %}<a class="btn" href="{{ cpUrl(basePath, pageParams|merge({page: page - 1})) }}">Previous</a>{% endif %}
+            <span>Page {{ page }} of {{ pages }} · {{ count }} total</span>
+            {% if page < pages %}<a class="btn" href="{{ cpUrl(basePath, pageParams|merge({page: page + 1})) }}">Next</a>{% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{% js %}
+    document.querySelectorAll('form[data-redirects-confirm]').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!window.confirm(form.dataset.redirectsConfirm)) event.preventDefault();
+        });
+    });
+{% endjs %}

@@ -1,0 +1,27 @@
+{% extends 'redirects/_layout' %}
+{% import '_includes/forms' as forms %}
+{% set title = 'Import redirects' %}
+{% set selectedSubnavItem = 'import' %}
+
+{% block content %}
+    <p>Paste CSV with a header: <code>source,destination,statusCode,mode</code>. Status and mode are optional and default to 301 and notFound. Imported redirects use exact matching and apply to all sites.</p>
+    <p>Existing source paths are skipped, including duplicates within the CSV.</p>
+    {% if report is not null %}
+        <div class="readable">
+            <h2>{{ imported ? 'Import complete' : 'Preview' }}</h2>
+            <p>{{ report.total }} rows: {{ report.created }} {{ imported ? 'created' : 'ready to create' }}, {{ report.skipped }} skipped, {{ report.errors|length }} errors.</p>
+            {% if report.errors %}<ul class="errors">{% for error in report.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% if not imported and report.created > 0 %}
+            <form method="post" class="mb-4">
+                {{ csrfInput() }}{{ actionInput('redirects/import/run') }}{{ hiddenInput('csv', csv) }}
+                <button type="submit" class="btn submit">Import {{ report.created }} redirects</button>
+            </form>
+        {% endif %}
+    {% endif %}
+    <form method="post">
+        {{ csrfInput() }}{{ actionInput('redirects/import/preview') }}
+        {{ forms.textareaField({label: 'CSV', id: 'csv', name: 'csv', value: csv, rows: 15, required: true, instructions: 'Quote values containing commas. Use a blank destination for 410 Gone.'}) }}
+        <button type="submit" class="btn">Preview import</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'redirects/_layout' %}
+{% import '_includes/forms' as forms %}
+{% set title = 'Redirect settings' %}
+{% set selectedSubnavItem = 'settings' %}
+{% set fullPageForm = not readOnly %}
+
+{% block content %}
+    {% if readOnly %}<p class="warning">Settings are read-only because administrative changes are disabled in this environment.</p>{% else %}{{ actionInput('redirects/settings/save') }}{% endif %}
+    {{ forms.lightswitchField({label: 'Log 404 requests', id: 'loggingEnabled', name: 'loggingEnabled', on: settings.loggingEnabled, disabled: readOnly, errors: settings.getErrors('loggingEnabled')}) }}
+    {{ forms.textareaField({label: 'Ignore patterns', id: 'ignorePatterns', name: 'ignorePatterns', value: settings.ignorePatterns, rows: 10, disabled: readOnly, errors: settings.getErrors('ignorePatterns'), instructions: 'One regular expression per line, without delimiters. Matched case-insensitively against the normalized path. These only affect logging, not redirects.'}) }}
+    {{ forms.textField({label: 'Maximum 404 rows', id: 'max404Rows', name: 'max404Rows', type: 'number', min: 1, value: settings.max404Rows, disabled: readOnly, errors: settings.getErrors('max404Rows'), instructions: 'When full, the least-hit paths are removed first, oldest first on ties.'}) }}
+    {{ forms.textField({label: 'Log retention (days)', id: 'retentionDays', name: 'retentionDays', type: 'number', min: 1, value: settings.retentionDays, disabled: readOnly, errors: settings.getErrors('retentionDays'), instructions: 'Remove paths whose last request is older than this many days.'}) }}
+{% endblock %}
